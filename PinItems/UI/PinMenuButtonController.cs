@@ -23,14 +23,6 @@ namespace PinItems.UI
             _menu = menu;
             if (_pinButton != null || wishlistButton == null)
             {
-                if (_pinButton != null)
-                {
-                    PinLogger.Info("PinMenuButtonController.EnsureButton called but pin button already exists.");
-                }
-                else
-                {
-                    PinLogger.Warn("PinMenuButtonController.EnsureButton missing wishlist button reference.");
-                }
                 return;
             }
 
@@ -43,14 +35,12 @@ namespace PinItems.UI
             _label = _pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
             UpdateLabelText();
             _pinButton.gameObject.SetActive(false);
-            PinLogger.Info($"Pin button cloned for menu '{menu.name}'.");
         }
 
         internal void RefreshButton()
         {
             if (_menu == null || _pinButton == null)
             {
-                PinLogger.Warn("PinMenuButtonController.RefreshButton missing menu or pin button instance.");
                 return;
             }
 
@@ -60,20 +50,11 @@ namespace PinItems.UI
             _pinButton.gameObject.SetActive(visible);
             if (!visible)
             {
-                if (item == null)
-                {
-                    PinLogger.Warn("Pin button hidden because ItemOperationMenu target item is null.");
-                }
-                else if (!eligible)
-                {
-                    PinLogger.Info($"Pin button hidden: target '{item.DisplayName}' is not eligible.");
-                }
                 return;
             }
 
             if (item == null)
             {
-                PinLogger.Warn("Pin button refresh aborted because target item disappeared unexpectedly.");
                 _pinButton.gameObject.SetActive(false);
                 return;
             }
@@ -82,7 +63,6 @@ namespace PinItems.UI
             _lastPinnedState = pinned;
             UpdateLabelText();
             _pinButton.interactable = true;
-            PinLogger.Info($"Pin button shown for '{item.DisplayName}' (pinned = {pinned}).");
         }
 
         private void OnEnable()
@@ -116,10 +96,8 @@ namespace PinItems.UI
             Item? item = GetTargetItem();
             if (item == null)
             {
-                PinLogger.Warn("Pin button clicked but no target item was found.");
                 return;
             }
-            PinLogger.Info($"Pin button clicked for '{item.DisplayName}'.");
             PinnedItemRegistry.Toggle(item);
             RefreshButton();
         }
@@ -137,7 +115,7 @@ namespace PinItems.UI
             }
             catch (Exception ex)
             {
-                PinLogger.Error($"Failed to read ItemOperationMenu target: {ex.Message}");
+                PinLogger.Error(ex.Message);
                 return null;
             }
         }
@@ -165,7 +143,6 @@ namespace PinItems.UI
         private void StripLocalizationComponents(Button button)
         {
             MonoBehaviour[] components = button.GetComponentsInChildren<MonoBehaviour>(true);
-            bool removed = false;
             foreach (MonoBehaviour component in components)
             {
                 if (component == null)
@@ -178,13 +155,7 @@ namespace PinItems.UI
                 if (!string.IsNullOrEmpty(ns) && ns.StartsWith("SodaCraft.Localizations", StringComparison.Ordinal))
                 {
                     Destroy(component);
-                    removed = true;
                 }
-            }
-
-            if (!removed)
-            {
-                PinLogger.Warn("PinMenuButtonController could not find localization component on pin button clone.");
             }
         }
 

@@ -6,6 +6,7 @@ namespace PinItems
 {
     internal static class PinnedItemRegistry
     {
+        private const string PinFlagKey = "PinItems.Pinned";
         private static readonly Dictionary<int, Item> PinnedItems = new Dictionary<int, Item>();
         private static readonly Dictionary<int, Action<Item>> DestroyHandlers = new Dictionary<int, Action<Item>>();
 
@@ -20,7 +21,7 @@ namespace PinItems
             return IsPinned(item) ? Unpin(item) : Pin(item);
         }
 
-        internal static bool Pin(Item? item)
+        internal static bool Pin(Item? item, bool restoredFromSave = false)
         {
             if (!IsEligible(item) || item == null)
             {
@@ -37,8 +38,8 @@ namespace PinItems
             Action<Item> handler = OnPinnedItemDestroyed;
             DestroyHandlers[id] = handler;
             item.onDestroy += handler;
+            SetPersistenceFlag(item, true);
             PinStateChanged?.Invoke(item, true);
-            PinLogger.Info($"Pinned {item.DisplayName} ({id})");
             return true;
         }
 
@@ -49,10 +50,6 @@ namespace PinItems
                 return false;
             }
             bool removed = RemoveInternal(item, true);
-            if (removed)
-            {
-                PinLogger.Info($"Unpinned {item.DisplayName} ({item.GetInstanceID()})");
-            }
             return removed;
         }
 
@@ -65,6 +62,15 @@ namespace PinItems
 
             int id = item.GetInstanceID();
             bool pinned = PinnedItems.ContainsKey(id);
+            if (!pinned && HasPersistenceFlag(item))
+            {
+                bool restored = Pin(item, true);
+                if (!restored)
+                {
+                    ClearPersistenceFlag(item);
+                }
+                pinned = restored;
+            }
             if (!pinned)
             {
                 return false;
@@ -127,6 +133,7 @@ namespace PinItems
                 item.onDestroy -= handler;
                 DestroyHandlers.Remove(id);
             }
+            ClearPersistenceFlag(item);
 
             if (signal)
             {
@@ -154,6 +161,46 @@ namespace PinItems
             }
             Item? root = item.GetRoot();
             return root != null && root == playerRoot;
+        }
+
+        private static void SetPersistenceFlag(Item? item, bool pinned)
+        {
+            if (item?.Variables == null)
+            {
+                return;
+            }
+
+            if (pinned)
+            {
+                item.Variables.SetBool(PinFlagKey, true, true);
+                return;
+            }
+
+            ClearPersistenceFlag(item);
+        }
+
+        private static bool HasPersistenceFlag(Item? item)
+        {
+            if (item?.Variables == null)
+            {
+                return false;
+            }
+
+            return item.Variables.GetBool(PinFlagKey, false);
+        }
+
+        private static void ClearPersistenceFlag(Item? item)
+        {
+            if (item?.Variables == null)
+            {
+                return;
+            }
+
+            var entry = item.Variables.GetEntry(PinFlagKey);
+            if (entry != null)
+            {
+                item.Variables.Remove(entry);
+            }
         }
     }
 }

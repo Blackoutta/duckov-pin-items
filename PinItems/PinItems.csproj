@@ -16,6 +16,16 @@
 		<SubPath>\Duckov_Data\Managed\</SubPath>
 		<SubPath Condition="'$(IsMac)'">/Duckov.app/Contents/Resources/Data/Managed/</SubPath>
 
+		<DuckovModsSubPath>\Duckov_Data\Mods\PinItems\</DuckovModsSubPath>
+		<DuckovModsSubPath Condition="'$(IsMac)'">/Duckov.app/Contents/Mods/PinItems/</DuckovModsSubPath>
+		<DuckovModPath>$(DuckovPath)$(DuckovModsSubPath)</DuckovModPath>
+		<HarmonyDllPath>$(MSBuildProjectDirectory)\release_extra\0Harmony.dll</HarmonyDllPath>
+		<HarmonyDllPath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/0Harmony.dll</HarmonyDllPath>
+		<ModInfoTemplatePath>$(MSBuildProjectDirectory)\release_extra\info.ini</ModInfoTemplatePath>
+		<ModInfoTemplatePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/info.ini</ModInfoTemplatePath>
+		<PreviewImagePath>$(MSBuildProjectDirectory)\release_extra\preview.png</PreviewImagePath>
+		<PreviewImagePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/preview.png</PreviewImagePath>
+
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="$(DuckovPath)$(SubPath)TeamSoda.*">
@@ -38,4 +48,12 @@
 		<PackageReference Include="Lib.Harmony" Version="2.4.1" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
+	<Target Name="CopyDllToDuckovModFolder" AfterTargets="Build" Condition="'$(TargetPath)' != '' and Exists('$(TargetPath)') and '$(DuckovPath)' != '' and Exists('$(DuckovPath)')">
+		<Message Text="Copying $(TargetFileName) to $(DuckovModPath)" Importance="high" />
+		<MakeDir Directories="$(DuckovModPath)" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DuckovModPath)$(TargetFileName)" SkipUnchangedFiles="true" />
+		<Copy Condition="Exists('$(HarmonyDllPath)')" SourceFiles="$(HarmonyDllPath)" DestinationFiles="$(DuckovModPath)0Harmony.dll" SkipUnchangedFiles="true" />
+		<Copy Condition="Exists('$(ModInfoTemplatePath)')" SourceFiles="$(ModInfoTemplatePath)" DestinationFiles="$(DuckovModPath)info.ini" SkipUnchangedFiles="true" />
+		<Copy Condition="Exists('$(PreviewImagePath)')" SourceFiles="$(PreviewImagePath)" DestinationFiles="$(DuckovModPath)preview.png" SkipUnchangedFiles="true" />
+	</Target>
 </Project>
