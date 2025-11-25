@@ -40,14 +40,6 @@ namespace PinItems
             item.onDestroy += handler;
             SetPersistenceFlag(item, true);
             PinStateChanged?.Invoke(item, true);
-            if (restoredFromSave)
-            {
-                PinLogger.Info($"Restored pin state for {item.DisplayName} ({id}) from save data.");
-            }
-            else
-            {
-                PinLogger.Info($"Pinned {item.DisplayName} ({id})");
-            }
             return true;
         }
 
@@ -58,10 +50,6 @@ namespace PinItems
                 return false;
             }
             bool removed = RemoveInternal(item, true);
-            if (removed)
-            {
-                PinLogger.Info($"Unpinned {item.DisplayName} ({item.GetInstanceID()})");
-            }
             return removed;
         }
 
