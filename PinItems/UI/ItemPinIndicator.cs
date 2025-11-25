@@ -74,10 +74,10 @@ namespace PinItems.UI
             GameObject indicatorObject = new GameObject("PinIndicator", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             indicatorObject.transform.SetParent(_display.transform, false);
             RectTransform rect = indicatorObject.GetComponent<RectTransform>();
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-4f, -4f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(4f, -4f);
             rect.sizeDelta = new Vector2(18f, 18f);
 
             _icon = indicatorObject.GetComponent<Image>();
