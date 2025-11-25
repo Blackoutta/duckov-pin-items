@@ -23,6 +23,8 @@
 		<HarmonyDllPath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/0Harmony.dll</HarmonyDllPath>
 		<ModInfoTemplatePath>$(MSBuildProjectDirectory)\release_extra\info.ini</ModInfoTemplatePath>
 		<ModInfoTemplatePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/info.ini</ModInfoTemplatePath>
+		<PreviewImagePath>$(MSBuildProjectDirectory)\release_extra\preview.png</PreviewImagePath>
+		<PreviewImagePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/preview.png</PreviewImagePath>
 
 	</PropertyGroup>
 	<ItemGroup>
@@ -52,5 +54,6 @@
 		<Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DuckovModPath)$(TargetFileName)" SkipUnchangedFiles="true" />
 		<Copy Condition="Exists('$(HarmonyDllPath)')" SourceFiles="$(HarmonyDllPath)" DestinationFiles="$(DuckovModPath)0Harmony.dll" SkipUnchangedFiles="true" />
 		<Copy Condition="Exists('$(ModInfoTemplatePath)')" SourceFiles="$(ModInfoTemplatePath)" DestinationFiles="$(DuckovModPath)info.ini" SkipUnchangedFiles="true" />
+		<Copy Condition="Exists('$(PreviewImagePath)')" SourceFiles="$(PreviewImagePath)" DestinationFiles="$(DuckovModPath)preview.png" SkipUnchangedFiles="true" />
 	</Target>
 </Project>
