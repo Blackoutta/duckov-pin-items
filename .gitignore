@@ -1,0 +1,4 @@
+*.user
+references
+.idea
+.vscode
