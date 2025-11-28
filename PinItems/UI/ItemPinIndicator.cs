@@ -10,11 +10,14 @@ namespace PinItems.UI
         private ItemDisplay? _display;
         private Item? _item;
         private Image? _icon;
+        private int _targetTypeId = -1;
+        private InventoryEntry? _entry;
+        private bool _isPlayerStorageDisplay;
 
         internal void Bind(ItemDisplay display)
         {
             _display = display;
-            _item = display?.Target;
+            CacheInventoryEntry();
             EnsureIcon();
             Refresh();
         }
@@ -33,14 +36,30 @@ namespace PinItems.UI
         private void OnDestroy()
         {
             PinnedItemRegistry.PinStateChanged -= OnPinStateChanged;
+            _display = null;
+            _entry = null;
+            _item = null;
+            _isPlayerStorageDisplay = false;
+            _targetTypeId = -1;
         }
 
-        private void OnPinStateChanged(Item changedItem, bool _)
+        private void OnPinStateChanged(int changedTypeId, bool _)
         {
-            if (_item == changedItem || _display?.Target == changedItem)
+            if (_display == null)
             {
-                Refresh();
+                return;
             }
+
+            if (_targetTypeId != changedTypeId)
+            {
+                Item? current = _display.Target;
+                if (current == null || current.TypeID != changedTypeId)
+                {
+                    return;
+                }
+            }
+
+            Refresh();
         }
 
         private void Refresh()
@@ -50,8 +69,19 @@ namespace PinItems.UI
                 return;
             }
 
+            UpdateStorageContext();
             _item = _display.Target;
-            bool shouldShow = _item != null && PinnedItemRegistry.IsPinned(_item);
+            _targetTypeId = _item?.TypeID ?? -1;
+            bool validateOwnership = true;
+            if (_isPlayerStorageDisplay)
+            {
+                validateOwnership = false;
+            }
+            else if (_item != null && _item.IsInPlayerStorage())
+            {
+                validateOwnership = false;
+            }
+            bool shouldShow = _item != null && PinnedItemRegistry.IsPinned(_item, validateOwnership);
             if (_icon == null)
             {
                 EnsureIcon();
@@ -83,6 +113,32 @@ namespace PinItems.UI
             _icon = indicatorObject.GetComponent<Image>();
             _icon.raycastTarget = false;
             _icon.gameObject.SetActive(false);
+        }
+
+        private void CacheInventoryEntry()
+        {
+            if (_display == null)
+            {
+                _entry = null;
+                _isPlayerStorageDisplay = false;
+                return;
+            }
+
+            _entry = _display.GetComponentInParent<InventoryEntry>();
+            UpdateStorageContext();
+        }
+
+        private void UpdateStorageContext()
+        {
+            if (_entry == null)
+            {
+                _isPlayerStorageDisplay = false;
+                return;
+            }
+
+            InventoryDisplay? master = _entry.Master;
+            Inventory? target = master?.Target;
+            _isPlayerStorageDisplay = target != null && target == PlayerStorage.Inventory;
         }
     }
 }

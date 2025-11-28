@@ -16,7 +16,6 @@ namespace PinItems.Patching
             Inventory targetInventory = __instance.TargetInventory;
             if (targetInventory == null || targetInventory != PlayerStorage.Inventory)
             {
-                PinLogger.Info("LootView.OnStoreAllButtonClicked prefix skipped - target inventory invalid.");
                 return true;
             }
 
@@ -25,11 +24,9 @@ namespace PinItems.Patching
             Inventory inventory = characterItem?.Inventory;
             if (inventory == null)
             {
-                PinLogger.Info("LootView.OnStoreAllButtonClicked prefix skipped - player inventory unavailable.");
                 return true;
             }
 
-            PinLogger.Info("LootView.OnStoreAllButtonClicked prefix executing custom Store All logic.");
             int lastIndex = inventory.GetLastItemPosition();
             bool soundPlayed = false;
             for (int i = 0; i <= lastIndex; i++)
@@ -47,13 +44,11 @@ namespace PinItems.Patching
 
                 if (PinnedItemRegistry.IsPinned(itemAt))
                 {
-                    PinLogger.Info($"Skipping pinned item '{itemAt.DisplayName}' at slot {i}.");
                     continue;
                 }
 
                 if (!targetInventory.AddAndMerge(itemAt, 0))
                 {
-                    PinLogger.Info($"Failed to store '{itemAt.DisplayName}' at slot {i}; target inventory full.");
                     break;
                 }
 
@@ -63,8 +58,6 @@ namespace PinItems.Patching
                     soundPlayed = true;
                 }
 
-                PinnedItemRegistry.Unpin(itemAt);
-                PinLogger.Info($"Stored '{itemAt.DisplayName}' from slot {i} via Store All.");
             }
 
             return false;

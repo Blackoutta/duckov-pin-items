@@ -11,7 +11,7 @@
 
 		<!-- For Mac users, please fill the folder path which contains Duckov.app below -->
 		<!-- Mac 用户请在下面这行填写你的鸭科夫安装路径（s包含 Duckov.app 的目录）-->
-		<DuckovPath Condition="'$(IsMac)'">/Users/huyangyi/Library/Application Support/Steam/steamapps/common/Escape from Duckov</DuckovPath>
+		<DuckovPath Condition="'$(IsMac)'">/Users/yang/Library/Application Support/Steam/steamapps/common/Escape from Duckov</DuckovPath>
 
 		<SubPath>\Duckov_Data\Managed\</SubPath>
 		<SubPath Condition="'$(IsMac)'">/Duckov.app/Contents/Resources/Data/Managed/</SubPath>
@@ -25,6 +25,8 @@
 		<ModInfoTemplatePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/info.ini</ModInfoTemplatePath>
 		<PreviewImagePath>$(MSBuildProjectDirectory)\release_extra\preview.png</PreviewImagePath>
 		<PreviewImagePath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/preview.png</PreviewImagePath>
+		<ReleaseExtraPath>$(MSBuildProjectDirectory)\release_extra\</ReleaseExtraPath>
+		<ReleaseExtraPath Condition="'$(IsMac)'">$(MSBuildProjectDirectory)/release_extra/</ReleaseExtraPath>
 
 	</PropertyGroup>
 	<ItemGroup>
@@ -52,6 +54,8 @@
 		<Message Text="Copying $(TargetFileName) to $(DuckovModPath)" Importance="high" />
 		<MakeDir Directories="$(DuckovModPath)" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DuckovModPath)$(TargetFileName)" SkipUnchangedFiles="true" />
+		<MakeDir Directories="$(ReleaseExtraPath)" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFiles="$(ReleaseExtraPath)$(TargetFileName)" SkipUnchangedFiles="true" />
 		<Copy Condition="Exists('$(HarmonyDllPath)')" SourceFiles="$(HarmonyDllPath)" DestinationFiles="$(DuckovModPath)0Harmony.dll" SkipUnchangedFiles="true" />
 		<Copy Condition="Exists('$(ModInfoTemplatePath)')" SourceFiles="$(ModInfoTemplatePath)" DestinationFiles="$(DuckovModPath)info.ini" SkipUnchangedFiles="true" />
 		<Copy Condition="Exists('$(PreviewImagePath)')" SourceFiles="$(PreviewImagePath)" DestinationFiles="$(DuckovModPath)preview.png" SkipUnchangedFiles="true" />

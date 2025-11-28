@@ -3,3 +3,4 @@ references
 .idea
 .vscode
 .DS_Store
+.dotnet
