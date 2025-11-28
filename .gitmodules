@@ -1,0 +1,3 @@
+[submodule "duckovAPI"]
+	path = duckovAPI
+	url = https://github.com/xiaomao-miao/duckovAPI.git

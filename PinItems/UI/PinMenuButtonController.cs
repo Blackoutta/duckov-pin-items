@@ -59,7 +59,8 @@ namespace PinItems.UI
                 return;
             }
 
-            bool pinned = PinnedItemRegistry.IsPinned(item);
+            bool inPlayerStorage = item.IsInPlayerStorage();
+            bool pinned = PinnedItemRegistry.IsPinned(item, !inPlayerStorage);
             _lastPinnedState = pinned;
             UpdateLabelText();
             _pinButton.interactable = true;
@@ -77,10 +78,10 @@ namespace PinItems.UI
             LocalizationManager.OnSetLanguage -= OnLanguageChanged;
         }
 
-        private void OnPinStateChanged(Item changedItem, bool _)
+        private void OnPinStateChanged(int changedTypeId, bool _)
         {
             Item? target = GetTargetItem();
-            if (changedItem == target)
+            if (target != null && target.TypeID == changedTypeId)
             {
                 RefreshButton();
             }
@@ -98,7 +99,8 @@ namespace PinItems.UI
             {
                 return;
             }
-            PinnedItemRegistry.Toggle(item);
+            bool validateOwnership = !item.IsInPlayerStorage();
+            PinnedItemRegistry.Toggle(item, validateOwnership);
             RefreshButton();
         }
 

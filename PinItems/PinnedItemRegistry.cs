@@ -1,84 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
+using Duckov.Utilities;
 using ItemStatsSystem;
 
 namespace PinItems
 {
     internal static class PinnedItemRegistry
     {
-        private const string PinFlagKey = "PinItems.Pinned";
-        private static readonly Dictionary<int, Item> PinnedItems = new Dictionary<int, Item>();
-        private static readonly Dictionary<int, Action<Item>> DestroyHandlers = new Dictionary<int, Action<Item>>();
+        private const string PinnedTypesKey = "PinItems.PinnedTypes";
+        private static readonly HashSet<int> PinnedTypeIds = new HashSet<int>();
+        private static bool _hydrated;
 
-        internal static event Action<Item, bool>? PinStateChanged;
+        internal static event Action<int, bool>? PinStateChanged;
 
-        internal static bool Toggle(Item? item)
+        internal static bool Toggle(Item? item, bool validateOwnership = true)
         {
             if (item == null)
             {
                 return false;
             }
-            return IsPinned(item) ? Unpin(item) : Pin(item);
+            return IsPinned(item, validateOwnership) ? Unpin(item) : Pin(item);
         }
 
-        internal static bool Pin(Item? item, bool restoredFromSave = false)
+        internal static bool Pin(Item? item)
         {
             if (!IsEligible(item) || item == null)
             {
                 return false;
             }
 
-            int id = item.GetInstanceID();
-            if (PinnedItems.ContainsKey(id))
+            if (!TryGetTypeId(item, out int typeId))
             {
                 return false;
             }
 
-            PinnedItems.Add(id, item);
-            Action<Item> handler = OnPinnedItemDestroyed;
-            DestroyHandlers[id] = handler;
-            item.onDestroy += handler;
-            SetPersistenceFlag(item, true);
-            PinStateChanged?.Invoke(item, true);
+            EnsureHydrated();
+            if (!PinnedTypeIds.Add(typeId))
+            {
+                return false;
+            }
+
+            PersistPinnedTypes();
+            PinStateChanged?.Invoke(typeId, true);
             return true;
         }
 
         internal static bool Unpin(Item? item)
         {
-            if (item == null)
+            if (!TryGetTypeId(item, out int typeId))
             {
                 return false;
             }
-            bool removed = RemoveInternal(item, true);
-            return removed;
+
+            EnsureHydrated();
+            if (!PinnedTypeIds.Remove(typeId))
+            {
+                return false;
+            }
+
+            PersistPinnedTypes();
+            PinStateChanged?.Invoke(typeId, false);
+            return true;
         }
 
         internal static bool IsPinned(Item? item, bool validateOwnership = true)
         {
-            if (item == null)
+            if (!TryGetTypeId(item, out int typeId))
             {
                 return false;
             }
 
-            int id = item.GetInstanceID();
-            bool pinned = PinnedItems.ContainsKey(id);
-            if (!pinned && HasPersistenceFlag(item))
-            {
-                bool restored = Pin(item, true);
-                if (!restored)
-                {
-                    ClearPersistenceFlag(item);
-                }
-                pinned = restored;
-            }
-            if (!pinned)
+            EnsureHydrated();
+            if (!PinnedTypeIds.Contains(typeId))
             {
                 return false;
             }
 
             if (validateOwnership && !IsOwnedByPlayer(item))
             {
-                RemoveInternal(item, true);
                 return false;
             }
 
@@ -99,53 +98,37 @@ namespace PinItems
             }
 
             Item? root = item.GetRoot();
-            return root != null && root == playerRoot;
+            if (root != null && root == playerRoot)
+            {
+                return true;
+            }
+
+            return item.IsInPlayerStorage();
         }
 
         internal static void Clear()
         {
-            foreach (KeyValuePair<int, Item> pair in PinnedItems)
+            EnsureHydrated();
+            if (PinnedTypeIds.Count == 0)
             {
-                if (DestroyHandlers.TryGetValue(pair.Key, out Action<Item> handler))
-                {
-                    pair.Value.onDestroy -= handler;
-                }
+                PersistPinnedTypes();
+                return;
             }
-            PinnedItems.Clear();
-            DestroyHandlers.Clear();
+
+            PinnedTypeIds.Clear();
+            PersistPinnedTypes();
         }
 
-        private static bool RemoveInternal(Item? item, bool signal)
+        private static bool TryGetTypeId(Item? item, out int typeId)
         {
             if (item == null)
             {
+                typeId = default;
                 return false;
             }
 
-            int id = item.GetInstanceID();
-            if (!PinnedItems.Remove(id))
-            {
-                return false;
-            }
-
-            if (DestroyHandlers.TryGetValue(id, out Action<Item> handler))
-            {
-                item.onDestroy -= handler;
-                DestroyHandlers.Remove(id);
-            }
-            ClearPersistenceFlag(item);
-
-            if (signal)
-            {
-                PinStateChanged?.Invoke(item, false);
-            }
-
+            typeId = item.TypeID;
             return true;
-        }
-
-        private static void OnPinnedItemDestroyed(Item destroyed)
-        {
-            RemoveInternal(destroyed, true);
         }
 
         private static bool IsOwnedByPlayer(Item? item)
@@ -163,44 +146,45 @@ namespace PinItems
             return root != null && root == playerRoot;
         }
 
-        private static void SetPersistenceFlag(Item? item, bool pinned)
+        private static void EnsureHydrated()
         {
-            if (item?.Variables == null)
+            if (_hydrated)
             {
                 return;
             }
 
-            if (pinned)
+            _hydrated = true;
+            string serialized = CommonVariables.GetString(PinnedTypesKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(serialized))
             {
-                item.Variables.SetBool(PinFlagKey, true, true);
                 return;
             }
 
-            ClearPersistenceFlag(item);
+            string[] tokens = serialized.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string token in tokens)
+            {
+                if (int.TryParse(token, out int typeId))
+                {
+                    PinnedTypeIds.Add(typeId);
+                }
+            }
         }
 
-        private static bool HasPersistenceFlag(Item? item)
+        private static void PersistPinnedTypes()
         {
-            if (item?.Variables == null)
-            {
-                return false;
-            }
-
-            return item.Variables.GetBool(PinFlagKey, false);
-        }
-
-        private static void ClearPersistenceFlag(Item? item)
-        {
-            if (item?.Variables == null)
+            if (!_hydrated)
             {
                 return;
             }
 
-            var entry = item.Variables.GetEntry(PinFlagKey);
-            if (entry != null)
+            if (PinnedTypeIds.Count == 0)
             {
-                item.Variables.Remove(entry);
+                CommonVariables.SetString(PinnedTypesKey, string.Empty);
+                return;
             }
+
+            string serialized = string.Join(",", PinnedTypeIds);
+            CommonVariables.SetString(PinnedTypesKey, serialized);
         }
     }
 }
