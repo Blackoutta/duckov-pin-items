@@ -4,20 +4,27 @@
 
 ![Preview](./PinItems/release_extra/preview.png)
 
-A small quality-of-life mod that lets you **pin** items in your backpack so they are not auto-stashed when you use **Store All**.
+A small quality-of-life mod that lets you pin item types so they refuse to auto-stash when you hit Store All.
 
-## Features
+Features
 
-- Mark any item as **pinned** so it stays in your backpack when you press `Store All`.
-- Avoid re-grabbing your favorite gear from the stash after every loot run.
-- Pinned items can still be moved to the stash one by one if you want to.
+- Pin a favorite bullet, tool, or med once and every copy of that model stays in your backpack on Store All.
+- Keep your go-to loadout intact without fishing it back out of the stash after every raid.
+- Pins survive manual moves—shuffle gear around however you like without losing your “keep” list.
 
-## Usage
+Usage
 
-- Open your backpack.
-- Select an item you want to keep on you.
-- Use the `Pin` option from the item menu.
-- When you hit `Store All`, pinned items remain in your backpack while everything else is stored.
-- If you manually move a pinned item into the stash, it is **unpinned** automatically.
+- Open your backpack or Storage.
+- Select an item model you always want on hand.
+- Hit the big shiny Pin option (right-click menu) to toggle it.
+- When you press Store All, pinned item types remain on you while everything else stacks neatly away.
+- You can still drag or double-click pinned items to send them into Storage manually whenever you really want to move them.
 
-Enjoy smoother inventory management with less stash juggling.
+Differences between Pinning and Locking (the L key)
+
+- Pinning applies to the item type, not the slot, so future copies of that gear stay protected automatically.
+- Pins don’t interfere with sorting; they simply block Store All from dumping your favorites.
+- The pin button lives in the item menu and is hard to miss.
+- Pinning does not conflict with Locking(the L key), you can use them both at the same time!
+
+Enjoy smoother inventory management with way less stash juggling.
